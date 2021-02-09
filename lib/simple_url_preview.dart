@@ -1,7 +1,10 @@
 library simple_url_preview;
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_store/flutter_cache_store.dart';
+import 'package:hive/hive.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:simple_url_preview/widgets/preview_description.dart';
@@ -12,6 +15,8 @@ import 'package:string_validator/string_validator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 typedef SimpleUrlPreviewBuilder = Widget Function(BuildContext context, Map<dynamic, dynamic> urlPreviewData);
+
+const URL_PREVIEW_BOX = 'URL_PREVIEW_BOX';
 
 /// Provides URL preview
 class SimpleUrlPreview extends StatefulWidget {
@@ -124,6 +129,17 @@ class _SimpleUrlPreviewState extends State<SimpleUrlPreview> {
       return;
     }
 
+    Box<String> urlPreviews = await Hive.openBox<String>(URL_PREVIEW_BOX);
+    String urlPreviewData = urlPreviews.get(widget.url);
+
+    if (urlPreviewData != null) {
+      setState(() {
+        _urlPreviewData = jsonDecode(urlPreviewData);
+        _isVisible = true;
+      });
+      return;
+    }
+
     final store = await CacheStore.getInstance();
     var response = await store.getFile(widget.url).catchError((error) {
       return null;
@@ -151,6 +167,7 @@ class _SimpleUrlPreviewState extends State<SimpleUrlPreview> {
 
     if (data != null && data.isNotEmpty) {
       setState(() {
+        urlPreviews.put(widget.url, jsonEncode(data));
         _urlPreviewData = data;
         _isVisible = true;
       });
