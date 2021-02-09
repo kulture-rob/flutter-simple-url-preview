@@ -11,6 +11,8 @@ import 'package:simple_url_preview/widgets/preview_title.dart';
 import 'package:string_validator/string_validator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+typedef SimpleUrlPreviewBuilder = Widget Function(BuildContext context, Map<dynamic, dynamic> urlPreviewData);
+
 /// Provides URL preview
 class SimpleUrlPreview extends StatefulWidget {
   /// URL for which preview is to be shown
@@ -49,6 +51,8 @@ class SimpleUrlPreview extends StatefulWidget {
   /// onTap URL preview, by default opens URL in default browser
   final VoidCallback onTap;
 
+  final SimpleUrlPreviewBuilder builder;
+
   SimpleUrlPreview({
     @required this.url,
     this.previewHeight = 130.0,
@@ -62,6 +66,7 @@ class SimpleUrlPreview extends StatefulWidget {
     this.imageLoaderColor,
     this.previewContainerPadding,
     this.onTap,
+    this.builder,
   })  : assert(previewHeight >= 130.0,
             'The preview height should be greater than or equal to 130'),
         assert(titleLines <= 2 && titleLines > 0,
@@ -179,6 +184,10 @@ class _SimpleUrlPreviewState extends State<SimpleUrlPreview> {
 
     if (_urlPreviewData == null || !_isVisible) {
       return SizedBox();
+    }
+
+    if (widget.builder != null) {
+      return widget.builder(context, _urlPreviewData);
     }
 
     return Container(
